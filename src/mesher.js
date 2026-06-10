@@ -86,18 +86,21 @@ export function meshChunk(world, cx, cz) {
       const [u, vv] = uvBase(ti);
       const [sk, bl] = light(wx, y, wz);
       const l = 7 / 16, r = 9 / 16, h = 10 / 16;
-      // 4 sides + top
+      // map only the 2px-wide stick strip of the tile so sides aren't skewed
+      const sideU0 = u + TS * (7 / 16), sideUW = TS * (2 / 16);
+      const sideV0 = vv + TS, sideVH = -TS * (10 / 16);
       const sides = [
         [[wx + l, y, wz + l], [wx + r, y, wz + l], [wx + r, y + h, wz + l], [wx + l, y + h, wz + l]],
         [[wx + l, y, wz + r], [wx + r, y, wz + r], [wx + r, y + h, wz + r], [wx + l, y + h, wz + r]],
         [[wx + l, y, wz + l], [wx + l, y, wz + r], [wx + l, y + h, wz + r], [wx + l, y + h, wz + l]],
         [[wx + r, y, wz + l], [wx + r, y, wz + r], [wx + r, y + h, wz + r], [wx + r, y + h, wz + l]],
       ];
-      for (const s of sides) quad(opaque, s, [u, vv + TS], TS, -TS, sk, bl, [1, 1, 1, 1]);
+      for (const s of sides) quad(opaque, s, [sideU0, sideV0], sideUW, sideVH, sk, bl, [1, 1, 1, 1]);
+      // top face shows the flame pixels
       quad(opaque, [
         [wx + l, y + h, wz + l], [wx + r, y + h, wz + l],
         [wx + r, y + h, wz + r], [wx + l, y + h, wz + r],
-      ], [u + TS * 0.4, vv + TS * 0.3], TS * 0.15, TS * 0.15, sk, bl, [1, 1, 1, 1]);
+      ], [u + TS * (7 / 16), vv + TS * (5 / 16)], TS * (2 / 16), -TS * (2 / 16), sk, bl, [1, 1, 1, 1]);
       continue;
     }
 

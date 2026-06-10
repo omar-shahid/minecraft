@@ -1,7 +1,7 @@
 // WebCraft — game orchestration: state machine, game loop, input, chunk
 // streaming, combat, portals, day/night, saving.
 
-import { B, I, blockDef, ITEMS, itemName } from './blocks.js';
+import { B, I, blockDef, isReplaceable, ITEMS, itemName } from './blocks.js';
 import { buildAtlas, buildIcons } from './textures.js';
 import { World, CX, CZ, H } from './world.js';
 import { SEA } from './worldgen.js';
@@ -453,6 +453,12 @@ class Game {
       this.openInventory();
       return;
     }
+    // plain flint is a common mix-up — point at the right tool
+    if (heldId === I.FLINT && (hit.id === B.OBSIDIAN || hit.id === B.TNT)) {
+      this.ui.hint("That's plain Flint — you need Flint and Steel (craft: 1 Iron Ingot + 1 Flint)", 3500);
+      this.placeCD = 0.3;
+      return;
+    }
     // flint & steel: portals + TNT
     if (heldId === I.FLINT_STEEL) {
       if (hit.id === B.TNT) {
@@ -472,7 +478,7 @@ class Game {
       ];
       let lit = false;
       for (const [cx, cy, cz] of candidates) {
-        if (this.world.getBlock(cx, cy, cz) !== B.AIR) continue;
+        if (!isReplaceable(this.world.getBlock(cx, cy, cz))) continue;
         if (this.world.ignitePortal(cx, cy, cz)) { lit = true; break; }
       }
       if (lit) {

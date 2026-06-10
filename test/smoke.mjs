@@ -83,6 +83,43 @@ check('ignite portal', w.ignitePortal(px, py + 1, pz) === true);
 check('portal blocks placed', w.getBlock(px, py, pz) === B.PORTAL && w.getBlock(px + 1, py + 2, pz) === B.PORTAL);
 check('portal registered', w.nearestPortal(px, pz, 10) !== null);
 
+// frame with vegetation inside must still light (regression: tall grass blocked ignition)
+const gx = 12, gz = 12, gy = surf + 10;
+for (let i = -1; i <= 2; i++) {
+  w.setBlock(gx + i, gy - 1, gz, B.OBSIDIAN);
+  w.setBlock(gx + i, gy + 3, gz, B.OBSIDIAN);
+}
+for (let j = 0; j < 3; j++) {
+  w.setBlock(gx - 1, gy + j, gz, B.OBSIDIAN);
+  w.setBlock(gx + 2, gy + j, gz, B.OBSIDIAN);
+}
+for (let j = 0; j < 3; j++) for (let i = 0; i < 2; i++) w.setBlock(gx + i, gy + j, gz, B.AIR);
+w.setBlock(gx, gy, gz, B.TALL_GRASS);
+w.setBlock(gx + 1, gy + 1, gz, B.FLOWER_RED);
+check('ignite portal with plants inside frame', w.ignitePortal(gx, gy + 2, gz) === true);
+check('plants replaced by portal', w.getBlock(gx, gy, gz) === B.PORTAL);
+
+// torch mesh maps only the 2px stick strip (regression: skewed full-tile sides)
+{
+  const ty = surf + 20;
+  w.setBlock(2, ty, 2, B.TORCH, false);
+  const tm = meshChunk(w, 0, 0);
+  let minU = Infinity, maxU = -Infinity;
+  const torchVerts = [];
+  for (let i = 0; i < tm.opaque.length; i += 8) {
+    if (Math.abs(tm.opaque[i + 1] - ty) <= 1 &&
+        Math.floor(tm.opaque[i]) === 2 && Math.floor(tm.opaque[i + 2]) === 2) {
+      minU = Math.min(minU, tm.opaque[i + 3]);
+      maxU = Math.max(maxU, tm.opaque[i + 3]);
+      torchVerts.push(i);
+    }
+  }
+  check('torch mesh exists', torchVerts.length >= 30);
+  check('torch uv spans the narrow stick strip, not the full tile',
+    maxU - minU < (2.2 / 16) / 16);
+  w.setBlock(2, ty, 2, B.AIR, false);
+}
+
 // ---- nether ----
 const n = new World(1337 ^ 0x6e657468, 'nether');
 n.ensureChunk(0, 0);

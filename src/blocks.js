@@ -144,6 +144,14 @@ def(B.WOOL_ORANGE, 'Orange Wool', { all: 'wool_orange' }, { hardness: 0.8 });
 export const BLOCKS = D;
 export const blockDef = (id) => D[id] || D[B.AIR];
 
+// Air or soft vegetation (flowers, tall grass, mushrooms...) that a portal,
+// placement, or fire can overwrite.
+export function isReplaceable(id) {
+  if (id === B.AIR) return true;
+  const d = D[id];
+  return !!d && !d.solid && !d.liquid && id !== B.PORTAL && d.model !== 'torch';
+}
+
 // ---------------- items (ids >= 100) ----------------
 // type: 'material' | 'tool' | 'food' | 'weapon'
 export const I = {

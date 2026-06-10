@@ -1,7 +1,7 @@
 // Chunked voxel world: storage, incremental flood-fill lighting (sky + block
 // channels), raycasting, explosions and nether-portal logic.
 
-import { B, blockDef } from './blocks.js';
+import { B, blockDef, isReplaceable } from './blocks.js';
 import { Generator, CX, CZ, H, idx } from './worldgen.js';
 
 export { CX, CZ, H };
@@ -336,10 +336,11 @@ export class World {
   // ---------------- nether portals ----------------
 
   // Try to light a portal whose interior contains (x,y,z). Returns true on success.
+  // Vegetation (tall grass, flowers...) inside the frame counts as empty.
   ignitePortal(x, y, z) {
     // drop to the bottom of the air pocket
     let by = y;
-    while (by > 1 && this.getBlock(x, by - 1, z) === B.AIR) by--;
+    while (by > 1 && isReplaceable(this.getBlock(x, by - 1, z))) by--;
     for (const axis of [[1, 0], [0, 1]]) {           // [dx, dz]
       for (let off = -1; off <= 0; off++) {
         const bx = x + axis[0] * off, bz = z + axis[1] * off;
@@ -359,7 +360,7 @@ export class World {
     if (by < 1 || by + 3 >= H) return false;
     for (let j = 0; j < 3; j++) for (let i = 0; i < 2; i++) {
       const id = this.getBlock(bx + dx * i, by + j, bz + dz * i);
-      if (id !== B.AIR) return false;
+      if (!isReplaceable(id)) return false;
     }
     for (let i = 0; i < 2; i++) {
       if (this.getBlock(bx + dx * i, by - 1, bz + dz * i) !== B.OBSIDIAN) return false;
