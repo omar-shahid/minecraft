@@ -448,11 +448,18 @@ function drawMaterialIcon(ctx, id) {
       }
       break;
     case I.FLINT: blob('#3a3a40', '#26262c'); break;
-    case I.FLINT_STEEL:
-      for (let i = 0; i < 6; i++) { p(3 + i, 5 + ((i % 2)), '#c8c8c8'); }
-      for (let y = 8; y < 13; y++) for (let x = 8; x < 13; x++)
-        if (Math.hypot(x - 10, y - 10) < 2.5) p(x, y, '#3a3a40');
+    case I.FLINT_STEEL: {
+      // dark flint stone, bottom-left
+      for (let y = 8; y < 14; y++) for (let x = 2; x < 8; x++)
+        if (Math.hypot(x - 4.5, y - 11) < 2.8) p(x, y, (x + y) % 3 ? '#3a3a40' : '#55555e');
+      // steel striker: C-shaped arc, top-right
+      const arc = [[10, 2], [11, 2], [12, 3], [13, 4], [13, 5], [13, 6], [13, 7],
+        [12, 8], [11, 9], [10, 9], [9, 8], [9, 3]];
+      for (const [x, y] of arc) { p(x, y, '#d8d8d8'); p(x - 1, y, '#a8a8a8'); }
+      // sparks between them
+      p(7, 6, '#ffe066'); p(8, 5, '#fff2a8'); p(6, 7, '#ffb53e'); p(8, 7, '#ffe066');
       break;
+    }
     case I.STRING:
       for (let i = 0; i < 12; i++) p(2 + i, 8 + Math.round(Math.sin(i) * 2), '#e8e8e8');
       break;

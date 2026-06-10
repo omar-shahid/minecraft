@@ -194,6 +194,73 @@ const { cubes, sprites } = buildEntityDraws(game.entities, game.world, 1, game.i
 check('item drops are sprites with uv coords', sprites.length > 0 &&
   Array.isArray(sprites[0].uv) && sprites[0].uv.length === 2);
 
+// --- nether portal: build a frame, light it with flint & steel, travel ---
+game.entities.length = 0;
+game.player.mode = 'creative';
+game.player.flying = true;
+const q = game.player.pos.map(Math.floor);
+const iy = Math.min(100, game.world.highestSolid(q[0], q[2]) + 6);
+const ix = q[0], iz = q[2] - 4;
+// clear the area, then build a 4x5 frame along X (interior 2 wide x 3 tall)
+for (let y = iy - 1; y <= iy + 3; y++)
+  for (let x = ix - 1; x <= ix + 2; x++)
+    for (let z = iz; z <= iz + 4; z++)
+      game.world.setBlock(x, y, z, B.AIR, false);
+for (let x = ix; x <= ix + 1; x++) {
+  game.world.setBlock(x, iy - 1, iz, B.OBSIDIAN, false);
+  game.world.setBlock(x, iy + 3, iz, B.OBSIDIAN, false);
+}
+for (let y = iy; y <= iy + 2; y++) {
+  game.world.setBlock(ix - 1, y, iz, B.OBSIDIAN, false);
+  game.world.setBlock(ix + 2, y, iz, B.OBSIDIAN, false);
+}
+// stand in front of the frame and aim at the middle of the left pillar
+game.player.pos = [ix + 0.5, iy - 0.5, iz + 3.5];
+game.player.vel = [0, 0, 0];
+const eye = game.player.eyePos();
+const tgt = [ix - 0.5, iy + 1.5, iz + 0.5];
+const ddx = tgt[0] - eye[0], ddy = tgt[1] - eye[1], ddz = tgt[2] - eye[2];
+game.player.yaw = Math.atan2(-ddx, -ddz);
+game.player.pitch = Math.atan2(ddy, Math.hypot(ddx, ddz));
+game.inv.slots[0] = { id: I.FLINT_STEEL, count: 1 };
+game.inv.selected = 0;
+game.placeCD = 0;
+game.useItem();
+check('portal lit with flint & steel', game.world.getBlock(ix, iy, iz) === B.PORTAL &&
+  game.world.getBlock(ix + 1, iy + 2, iz) === B.PORTAL);
+
+// step into the portal and wait out the travel delay + fade
+game.player.pos = [ix + 0.5, iy + 0.05, iz + 0.5];
+game.player.vel = [0, 0, 0];
+await sleep(2800);
+check('travelled to the nether', game.world.dim === 'nether');
+check('nether terrain generated around player',
+  game.world.hasChunk(Math.floor(game.player.pos[0]) >> 4, Math.floor(game.player.pos[2]) >> 4));
+check('return portal exists in nether', game.world.portals.length >= 1 &&
+  game.world.getBlock(game.world.portals[0].x, game.world.portals[0].y,
+    game.world.portals[0].z) === B.PORTAL);
+check('player standing in/near the return portal',
+  Math.abs(game.player.pos[0] - (game.world.portals[0].x + 0.5)) < 2 &&
+  Math.abs(game.player.pos[2] - (game.world.portals[0].z + 0.5)) < 2);
+
+// --- creative search box filters and doesn't close the inventory while typing ---
+key('KeyE');
+check('inventory open in nether', game.state === 'inventory');
+const searchEl = document.getElementById('invSearch');
+check('creative search box exists', !!searchEl);
+searchEl.focus();
+searchEl.value = 'flint';
+searchEl.dispatchEvent(new window.Event('input', { bubbles: true }));
+const visible = [...document.querySelectorAll('#inv .grid.creative .slot')]
+  .filter(el => el.style.display !== 'none');
+check('search filters to flint items', visible.length >= 1 && visible.length <= 4);
+// typing "e" in the search box must NOT toggle the inventory closed
+searchEl.dispatchEvent(new window.KeyboardEvent('keydown', { code: 'KeyE', bubbles: true }));
+check('typing E in search keeps inventory open', game.state === 'inventory');
+key('KeyE');   // dispatched on document, no input target -> closes
+check('E outside search closes inventory', game.state === 'playing');
+key('KeyE', 'keyup');
+
 // --- pause via escape ---
 window._locked = null; fire();
 check('pointer unlock pauses', game.state === 'paused');

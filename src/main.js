@@ -247,6 +247,9 @@ class Game {
 
     document.addEventListener('keydown', (e) => {
       if (this.state === 'menu') return;
+      // let the user type freely in text inputs (e.g. creative search)
+      if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') &&
+          e.code !== 'Escape') return;
       // keep Space/Tab from activating a still-focused menu button or moving focus
       if (e.code === 'Space' || e.code === 'Tab') e.preventDefault();
       this.input.add(e.code);
@@ -459,9 +462,25 @@ class Game {
         this.placeCD = 0.3;
         return;
       }
-      if (this.world.ignitePortal(hit.px, hit.py, hit.pz)) {
+      // try the clicked face's cell, then every cell around the clicked block,
+      // so lighting works no matter which part of the frame is clicked
+      const candidates = [
+        [hit.px, hit.py, hit.pz],
+        [hit.x + 1, hit.y, hit.z], [hit.x - 1, hit.y, hit.z],
+        [hit.x, hit.y + 1, hit.z], [hit.x, hit.y - 1, hit.z],
+        [hit.x, hit.y, hit.z + 1], [hit.x, hit.y, hit.z - 1],
+      ];
+      let lit = false;
+      for (const [cx, cy, cz] of candidates) {
+        if (this.world.getBlock(cx, cy, cz) !== B.AIR) continue;
+        if (this.world.ignitePortal(cx, cy, cz)) { lit = true; break; }
+      }
+      if (lit) {
         playSound('portal');
-        this.ui.hint('Portal activated!');
+        this.ui.hint('Portal activated! Step in to travel to ' +
+          (this.world.dim === 'over' ? 'the Nether' : 'the Overworld'));
+      } else if (hit.id === B.OBSIDIAN) {
+        this.ui.hint('No portal here — build an upright 4x5 obsidian ring (2x3 opening, corners optional)', 3500);
       }
       this.placeCD = 0.3;
       return;

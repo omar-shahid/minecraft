@@ -73,7 +73,9 @@ export class UI {
     help.style.cssText = 'font-size:11px;color:#789;margin-top:10px;line-height:1.5';
     help.innerHTML = 'WASD move · Space jump / fly up · Shift sneak / fly down · Ctrl sprint ·' +
       ' E inventory &amp; crafting · Q drop · F or double-Space toggle fly (creative) ·' +
-      ' F3 debug · Mouse1 mine / attack · Mouse2 place / use / eat';
+      ' F3 debug · Mouse1 mine / attack · Mouse2 place / use / eat' +
+      '<br><span style="color:#a8c">Nether portal: build an upright 4x5 obsidian ring' +
+      ' (2x3 opening) and click inside it with Flint &amp; Steel</span>';
     p.append(name, seed, mode, create, settings, help);
   }
   hideMenu() { $('menu').classList.add('hidden'); }
@@ -357,8 +359,14 @@ export class UI {
       const h = document.createElement('h3');
       h.textContent = 'Creative Items';
       right.appendChild(h);
+      const search = document.createElement('input');
+      search.id = 'invSearch';
+      search.type = 'text';
+      search.placeholder = 'Search items... (e.g. flint, egg, wool)';
+      right.appendChild(search);
       const g = document.createElement('div');
       g.className = 'grid creative';
+      const entries = [];
       for (const id of CREATIVE_ITEMS) {
         const el = this._slotEl({ id, count: 1 }, () => {});
         el.querySelector('.cnt').textContent = '';
@@ -369,11 +377,17 @@ export class UI {
           playSound('click');
           this._updateCursorEl();
         };
+        entries.push([itemName(id).toLowerCase(), el]);
         g.appendChild(el);
       }
+      search.oninput = () => {
+        const q = search.value.trim().toLowerCase();
+        for (const [name, el] of entries)
+          el.style.display = !q || name.includes(q) ? '' : 'none';
+      };
       right.appendChild(g);
       const tip = document.createElement('div');
-      tip.style.cssText = 'font-size:11px;color:#555;margin-top:6px;max-width:240px';
+      tip.style.cssText = 'font-size:11px;color:#555;margin-top:6px;max-width:420px';
       tip.textContent = 'Click an item to grab a stack (shift for one). Right-click to clear cursor.';
       right.appendChild(tip);
     }
@@ -410,5 +424,15 @@ export class UI {
       list.appendChild(el);
     }
     crafting.appendChild(list);
+
+    // hovered item name bar
+    const nameBar = document.createElement('div');
+    nameBar.id = 'invNameBar';
+    nameBar.textContent = ' ';
+    left.appendChild(nameBar);
+    panel.addEventListener('mouseover', (e) => {
+      const slot = e.target.closest && e.target.closest('.slot');
+      nameBar.textContent = (slot && slot.title) || ' ';
+    });
   }
 }
