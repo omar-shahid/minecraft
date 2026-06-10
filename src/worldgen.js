@@ -87,21 +87,44 @@ export class Generator {
     };
     blob(B.COAL_ORE, 10, 8, 100, 8);
     blob(B.IRON_ORE, 7, 4, 60, 6);
+    blob(B.GOLD_ORE, 3, 2, 32, 5);
+    blob(B.REDSTONE_ORE, 3, 2, 18, 6);
+    blob(B.LAPIS_ORE, 2, 4, 32, 5);
     blob(B.DIAMOND_ORE, 2, 2, 16, 5);
+    if (rng() < 0.25) blob(B.EMERALD_ORE, 1, 4, 32, 2);
     blob(B.GRAVEL, 4, 10, 70, 9);
 
-    // trees & flowers (kept fully inside the chunk so generation stays local)
+    // trees & vegetation (kept fully inside the chunk so generation stays local)
     for (let z = 0; z < CZ; z++) for (let x = 0; x < CX; x++) {
       const wx = x0 + x, wz = z0 + z;
       const h = heights[x + z * CX];
-      if (h >= H - 9 || blocks[idx(x, h, z)] !== B.GRASS) continue;
+      if (h >= H - 9) continue;
+      const surface = blocks[idx(x, h, z)];
       const biome = this.biome(wx, wz);
       const r = hash2i(this.seed ^ 0xabcdef, wx, wz) % 1000;
+
+      if (surface === B.SAND && biome === 'desert' && h > SEA + 1) {
+        // cacti
+        if (r < 6) {
+          const tall = 1 + (r % 3);
+          for (let i = 0; i < tall && h + 1 + i < H; i++)
+            blocks[idx(x, h + 1 + i, z)] = B.CACTUS;
+        }
+        continue;
+      }
+      if (surface !== B.GRASS) continue;
+
       const treeChance = biome === 'forest' ? 18 : biome === 'plains' ? 3 : 0;
       if (r < treeChance && x >= 2 && x <= 13 && z >= 2 && z <= 13) {
         this.tree(blocks, x, h + 1, z, 4 + (r % 3));
-      } else if (r >= 988 && biome !== 'desert') {
+      } else if (r >= 988) {
         blocks[idx(x, h + 1, z)] = (r % 2) ? B.FLOWER_RED : B.FLOWER_YELLOW;
+      } else if (r >= 870) {
+        blocks[idx(x, h + 1, z)] = B.TALL_GRASS;
+      } else if (r >= 866 && biome === 'forest') {
+        blocks[idx(x, h + 1, z)] = (r % 2) ? B.MUSHROOM_RED : B.MUSHROOM_BROWN;
+      } else if (r === 860) {
+        blocks[idx(x, h + 1, z)] = B.PUMPKIN;
       }
     }
   }

@@ -39,9 +39,13 @@ class Game {
   constructor() {
     this.canvas = document.getElementById('gl');
     const atlas = buildAtlas();
-    const { icons, colors } = buildIcons(atlas);
+    const { icons, colors, iconAtlas, iconIndex } = buildIcons(atlas);
     this.itemColors = (id) => colors[id] || [0.6, 0.6, 0.6];
-    this.renderer = new Renderer(this.canvas, atlas);
+    this.iconUV = (id) => {
+      const i = iconIndex[id] || 0;
+      return [(i % 16) / 16, ((i / 16) | 0) / 16];
+    };
+    this.renderer = new Renderer(this.canvas, atlas, iconAtlas);
     this.ui = new UI(icons);
     this.settings = loadSettings();
     setSoundEnabled(this.settings.sound);
@@ -186,10 +190,11 @@ class Game {
       this.ui.updateHotbar(this.inv);
       this.ui.updateHearts(this.player);
       this.state = 'playing';
+      if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
       this.lockPointer();
       this.ui.hint(data.mode === 'creative'
-        ? 'Creative mode — press F to toggle flying, E for items'
-        : 'Survival — punch trees, watch out at night!');
+        ? 'Creative — E: items & crafting · Space/Shift: fly up/down · F or double-Space: toggle fly'
+        : 'Survival — E: inventory & crafting · punch trees, watch out at night!', 6000);
     }, 30));
   }
 
@@ -242,7 +247,21 @@ class Game {
 
     document.addEventListener('keydown', (e) => {
       if (this.state === 'menu') return;
+      // keep Space/Tab from activating a still-focused menu button or moving focus
+      if (e.code === 'Space' || e.code === 'Tab') e.preventDefault();
       this.input.add(e.code);
+      // double-tap space toggles flying in creative
+      if (e.code === 'Space' && !e.repeat && this.state === 'playing' &&
+          this.player.mode === 'creative') {
+        const now = performance.now();
+        if (now - (this._lastSpace || 0) < 280) {
+          this.player.flying = !this.player.flying;
+          this.player.vel[1] = 0;
+          this.ui.hint(this.player.flying
+            ? 'Flying — Space to rise, Shift to descend' : 'Flying disabled', 1600);
+          this._lastSpace = 0;
+        } else this._lastSpace = now;
+      }
       if (e.code === 'Escape') {
         if (this.state === 'inventory') this.closeInventory();
         else if (this.state === 'playing') this.pause();
@@ -263,7 +282,8 @@ class Game {
       }
       if (e.code === 'KeyF' && this.player.mode === 'creative') {
         this.player.flying = !this.player.flying;
-        this.ui.hint(this.player.flying ? 'Flying enabled' : 'Flying disabled', 1000);
+        this.ui.hint(this.player.flying
+          ? 'Flying — Space to rise, Shift to descend' : 'Flying disabled', 1600);
       }
       if (e.code === 'F3') { e.preventDefault(); this.ui.toggleDebug(); }
       if (e.code === 'KeyQ') this.dropHeld();
@@ -417,6 +437,14 @@ class Game {
     }
     if (!hit) return;
 
+    // spawn eggs
+    if (it && it.type === 'egg') {
+      this.entities.push(makeMob(it.mob, hit.px + 0.5, hit.py, hit.pz + 0.5));
+      if (this.player.mode === 'survival') { this.inv.consumeHeld(); this.ui.updateHotbar(this.inv); }
+      playSound('place');
+      this.placeCD = 0.25;
+      return;
+    }
     // crafting table opens crafting
     if (hit.id === B.CRAFTING && !this.input.has('ShiftLeft')) {
       this.openInventory();
@@ -751,7 +779,7 @@ class Game {
     const day = this.world.dim === 'nether' ? 0 : this.dayFactor();
     const { hit } = this.rayTarget();
 
-    const draws = buildEntityDraws(this.entities, this.world, this.dayFactor(), this.itemColors);
+    const { cubes: draws, sprites } = buildEntityDraws(this.entities, this.world, this.dayFactor(), this.iconUV);
     // primed TNT rendering
     for (const t of this.primedTNT) {
       const m = mat4();
@@ -772,6 +800,7 @@ class Game {
       time: this.time,
       selection: this.state === 'playing' && hit ? hit : null,
       entityDraws: draws,
+      spriteDraws: sprites,
       underwater: this.world.getBlock(Math.floor(p.pos[0]), Math.floor(p.pos[1] + p.eye), Math.floor(p.pos[2])) === B.WATER,
     });
 

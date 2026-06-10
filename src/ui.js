@@ -71,8 +71,9 @@ export class UI {
     settings.onclick = () => { playSound('click'); cb.onSettings(); };
     const help = document.createElement('div');
     help.style.cssText = 'font-size:11px;color:#789;margin-top:10px;line-height:1.5';
-    help.innerHTML = 'WASD move · Space jump · Ctrl sprint · Shift sneak · E inventory ·' +
-      ' Q drop · F fly (creative) · F3 debug · Mouse1 mine / attack · Mouse2 place / use';
+    help.innerHTML = 'WASD move · Space jump / fly up · Shift sneak / fly down · Ctrl sprint ·' +
+      ' E inventory &amp; crafting · Q drop · F or double-Space toggle fly (creative) ·' +
+      ' F3 debug · Mouse1 mine / attack · Mouse2 place / use / eat';
     p.append(name, seed, mode, create, settings, help);
   }
   hideMenu() { $('menu').classList.add('hidden'); }
@@ -375,36 +376,39 @@ export class UI {
       tip.style.cssText = 'font-size:11px;color:#555;margin-top:6px;max-width:240px';
       tip.textContent = 'Click an item to grab a stack (shift for one). Right-click to clear cursor.';
       right.appendChild(tip);
-    } else {
-      const h = document.createElement('h3');
-      h.textContent = c.nearTable ? 'Crafting (table)' : 'Crafting';
-      right.appendChild(h);
-      const list = document.createElement('div');
-      list.id = 'craftlist';
-      const rs = craftableRecipes(inv, c.nearTable);
-      for (const { recipe, ok } of rs) {
-        const el = document.createElement('div');
-        el.className = 'recipe' + (ok ? '' : ' no');
-        const img = document.createElement('img');
-        img.src = this.icon(recipe.out);
-        const name = document.createElement('span');
-        name.className = 'rname';
-        name.textContent = `${itemName(recipe.out)}${recipe.count > 1 ? ' x' + recipe.count : ''}`;
-        const needs = document.createElement('span');
-        needs.className = 'rneeds';
-        needs.textContent = recipe.ins.map(([id, n]) => `${n} ${itemName(id)}`).join(', ')
-          + (recipe.table && !c.nearTable ? ' (needs table)' : '');
-        el.append(img, name, needs);
-        if (ok) el.onmousedown = (e) => {
-          e.preventDefault();
-          craft(inv, recipe);
-          playSound('craft');
-          this._renderInv();
-          c.onChange && c.onChange();
-        };
-        list.appendChild(el);
-      }
-      right.appendChild(list);
     }
+
+    // crafting list (both modes; creative crafts in a third column)
+    const crafting = document.createElement('div');
+    panel.appendChild(crafting);
+    const h = document.createElement('h3');
+    h.textContent = c.nearTable ? 'Crafting (table nearby)' : 'Crafting';
+    crafting.appendChild(h);
+    const list = document.createElement('div');
+    list.id = 'craftlist';
+    const rs = craftableRecipes(inv, c.nearTable || c.creative);
+    for (const { recipe, ok } of rs) {
+      const el = document.createElement('div');
+      el.className = 'recipe' + (ok ? '' : ' no');
+      const img = document.createElement('img');
+      img.src = this.icon(recipe.out);
+      const name = document.createElement('span');
+      name.className = 'rname';
+      name.textContent = `${itemName(recipe.out)}${recipe.count > 1 ? ' x' + recipe.count : ''}`;
+      const needs = document.createElement('span');
+      needs.className = 'rneeds';
+      needs.textContent = recipe.ins.map(([id, n]) => `${n} ${itemName(id)}`).join(', ')
+        + (recipe.table && !(c.nearTable || c.creative) ? ' (needs table)' : '');
+      el.append(img, name, needs);
+      if (ok) el.onmousedown = (e) => {
+        e.preventDefault();
+        craft(inv, recipe);
+        playSound('craft');
+        this._renderInv();
+        c.onChange && c.onChange();
+      };
+      list.appendChild(el);
+    }
+    crafting.appendChild(list);
   }
 }

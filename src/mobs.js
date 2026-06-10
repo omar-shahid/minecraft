@@ -364,8 +364,10 @@ export function trySpawn(world, player, entities, dayFactor, rng) {
 const colorCache = {};
 function col(h) { return colorCache[h] || (colorCache[h] = hex(h)); }
 
-export function buildEntityDraws(entities, world, dayFactor, itemColors) {
+// Returns { cubes, sprites } — sprites are item drops drawn as icon billboards.
+export function buildEntityDraws(entities, world, dayFactor, iconUV) {
   const draws = [];
+  const sprites = [];
   for (const e of entities) {
     if (e.dead) continue;
     const lx = Math.floor(e.pos[0]), ly = Math.floor(e.pos[1] + 0.5), lz = Math.floor(e.pos[2]);
@@ -374,12 +376,12 @@ export function buildEntityDraws(entities, world, dayFactor, itemColors) {
     light = Math.pow(light, 1.4) * 0.95 + 0.05;
 
     if (e.kind === 'item') {
-      const bob = Math.sin(e.t * 2.5) * 0.06 + 0.12;
+      const bob = Math.sin(e.t * 2.5) * 0.06 + 0.1;
       let m = mat4();
       translate(m, m, e.pos[0], e.pos[1] + bob, e.pos[2]);
-      rotateY(m, m, e.t * 1.5);
-      scale(m, m, 0.25, 0.25, 0.25);
-      draws.push({ model: m, color: itemColors(e.item), light, flash: 0 });
+      rotateY(m, m, e.t * 1.8);
+      scale(m, m, 0.45, 0.45, 0.45);
+      sprites.push({ model: m, uv: iconUV(e.item), light: Math.max(light, 0.25) });
       continue;
     }
     if (e.kind === 'arrow') {
@@ -417,5 +419,5 @@ export function buildEntityDraws(entities, world, dayFactor, itemColors) {
       draws.push({ model: m, color: col(part.col), light, flash });
     }
   }
-  return draws;
+  return { cubes: draws, sprites };
 }

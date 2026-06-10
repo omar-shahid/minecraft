@@ -225,7 +225,132 @@ const PAINTERS = {
     px(7, 5, [255, 250, 180]); px(8, 5, [255, 250, 180]);
   },
   snow: (px, rng) => speckle('#f4fbfb', 0.04, rng, px),
+  gold_ore: (px, rng) => oreTile(px, rng, '#fcdd3e'),
+  redstone_ore: (px, rng) => oreTile(px, rng, '#ff2a20'),
+  lapis_ore: (px, rng) => oreTile(px, rng, '#2a55cf'),
+  emerald_ore: (px, rng) => oreTile(px, rng, '#21d860'),
+  gold_block: (px, rng) => metalBlock(px, rng, [248, 211, 62]),
+  iron_block: (px, rng) => metalBlock(px, rng, [216, 216, 216]),
+  diamond_block: (px, rng) => metalBlock(px, rng, [99, 232, 220]),
+  mossy_cobble: (px, rng) => {
+    PAINTERS.cobble(px, rng);
+    for (let i = 0; i < 26; i++) {
+      const x = (rng() * 16) | 0, y = (rng() * 16) | 0;
+      const m = 0.8 + rng() * 0.4;
+      px(x, y, [70 * m, 120 * m, 50 * m]);
+    }
+  },
+  ice: (px, rng) => {
+    for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+      const m = 0.9 + rng() * 0.12;
+      const streak = ((x + y * 2) % 9 === 0) ? 1.12 : 1;
+      px(x, y, [160 * m * streak, 200 * m * streak, 245 * m], 205);
+    }
+  },
+  pumpkin_side: (px, rng) => {
+    for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+      let m = 0.9 + rng() * 0.15;
+      if (x % 5 === 0) m *= 0.72;
+      if (y === 0) m *= 0.8;
+      px(x, y, [222 * m, 118 * m, 28 * m]);
+    }
+  },
+  pumpkin_top: (px, rng) => {
+    for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+      const d = Math.max(Math.abs(x - 7.5), Math.abs(y - 7.5));
+      const m = (0.85 + rng() * 0.15) * (d > 6.5 ? 0.7 : 1);
+      if (d < 1.6) px(x, y, [90 * m, 110 * m, 40 * m]);
+      else px(x, y, [210 * m, 112 * m, 26 * m]);
+    }
+  },
+  nether_brick: (px, rng) => {
+    for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+      const row = (y / 4) | 0;
+      const off = row % 2 ? 4 : 0;
+      const m = 0.8 + rng() * 0.3;
+      if (y % 4 === 3 || (x + off) % 8 === 7) px(x, y, [18, 9, 11]);
+      else px(x, y, [60 * m, 28 * m, 33 * m]);
+    }
+  },
+  quartz_block: (px, rng) => {
+    speckle('#ece6df', 0.04, rng, px);
+    for (let x = 0; x < 16; x++) { px(x, 0, [245, 242, 238]); px(x, 15, [205, 198, 190]); }
+  },
+  end_stone: (px, rng) => speckle('#dbde9e', 0.12, rng, px, '#c8cc84'),
+  bookshelf: (px, rng) => {
+    PAINTERS.planks(px, rng);
+    const cols = ['#a03030', '#306aa0', '#3aa050', '#c0a030', '#7a4aa0', '#a06a30'];
+    for (const y0 of [2, 9]) {
+      for (let x = 1; x < 15; x++) {
+        const c = hex(cols[(x + y0) % cols.length]);
+        for (let y = y0; y < y0 + 5; y++) {
+          if (x % 3 === 0) px(x, y, [40, 28, 16]);
+          else px(x, y, y === y0 ? [c[0] * 0.7, c[1] * 0.7, c[2] * 0.7] : c);
+        }
+      }
+    }
+  },
+  mushroom_red: (px, rng) => {
+    for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) px(x, y, [0, 0, 0], 0);
+    for (let y = 9; y < 16; y++) for (let x = 7; x < 9; x++) px(x, y, [232, 222, 200]);
+    for (let y = 3; y < 9; y++) {
+      const w = y < 5 ? y : 6;
+      for (let x = 8 - w; x < 8 + w; x++) px(x, y, [200, 40, 35]);
+    }
+    px(6, 5, [240, 240, 240]); px(10, 4, [240, 240, 240]); px(8, 7, [240, 240, 240]);
+    px(4, 7, [240, 240, 240]); px(12, 6, [240, 240, 240]);
+  },
+  mushroom_brown: (px, rng) => {
+    for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) px(x, y, [0, 0, 0], 0);
+    for (let y = 9; y < 16; y++) for (let x = 7; x < 9; x++) px(x, y, [225, 215, 195]);
+    for (let y = 4; y < 9; y++) {
+      const w = y < 6 ? y - 1 : 5;
+      for (let x = 8 - w; x < 8 + w; x++) px(x, y, [148, 110, 80]);
+    }
+  },
+  tall_grass: (px, rng) => {
+    for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) px(x, y, [0, 0, 0], 0);
+    for (let i = 0; i < 7; i++) {
+      const bx = 2 + i * 2, top = 2 + ((rng() * 6) | 0);
+      for (let y = 15; y >= top; y--) {
+        const m = 0.8 + rng() * 0.35;
+        px(bx + ((y % 3 === 0) ? 1 : 0), y, [78 * m, 160 * m, 58 * m]);
+      }
+    }
+  },
+  cactus_side: (px, rng) => {
+    for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+      let m = 0.85 + rng() * 0.2;
+      if (x % 4 === 1) m *= 1.25;
+      if (x % 4 === 3) m *= 0.7;
+      px(x, y, [58 * m, 138 * m, 50 * m]);
+      if (x % 4 === 1 && y % 4 === 2) px(x, y, [230, 235, 210]);
+    }
+  },
+  cactus_top: (px, rng) => {
+    for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+      const d = Math.max(Math.abs(x - 7.5), Math.abs(y - 7.5));
+      const m = 0.85 + rng() * 0.2;
+      px(x, y, d > 6 ? [60 * m, 130 * m, 52 * m] : [98 * m, 175 * m, 78 * m]);
+    }
+  },
+  wool_red: (px, rng) => speckle('#c03434', 0.07, rng, px, '#a82c2c'),
+  wool_blue: (px, rng) => speckle('#3a52b4', 0.07, rng, px, '#32479e'),
+  wool_green: (px, rng) => speckle('#4a9e3c', 0.07, rng, px, '#3f8a33'),
+  wool_yellow: (px, rng) => speckle('#d8c43a', 0.07, rng, px, '#c4b132'),
+  wool_black: (px, rng) => speckle('#262626', 0.12, rng, px, '#1a1a1a'),
+  wool_orange: (px, rng) => speckle('#d8842a', 0.07, rng, px, '#c47524'),
 };
+
+function metalBlock(px, rng, c) {
+  for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+    let m = 0.92 + rng() * 0.08;
+    if (x === 0 || y === 0) m = 1.12;
+    else if (x === 15 || y === 15) m = 0.72;
+    else if (x === 1 || y === 1) m = 1.04;
+    px(x, y, [Math.min(255, c[0] * m), Math.min(255, c[1] * m), Math.min(255, c[2] * m)]);
+  }
+}
 
 export function buildAtlas() {
   const size = ATLAS_TILES * TILE_PX;
@@ -274,6 +399,20 @@ function drawToolIcon(ctx, kind, tier) {
   }
 }
 
+function drawEggIcon(ctx, base, spots) {
+  const p = (x, y, c) => { ctx.fillStyle = c; ctx.fillRect(x, y, 1, 1); };
+  for (let y = 2; y < 14; y++) for (let x = 4; x < 12; x++) {
+    const d = Math.hypot((x - 7.5) / 3.6, (y - 8) / 5.6);
+    if (d < 1) p(x, y, d > 0.82 ? shade(base, 0.7) : base);
+  }
+  for (const [x, y] of [[6, 5], [9, 7], [7, 10], [10, 11], [5, 9], [8, 4]]) p(x, y, spots);
+}
+function shade(hexCol, m) {
+  const n = parseInt(hexCol.slice(1), 16);
+  const f = (v) => Math.min(255, Math.round(v * m));
+  return `rgb(${f((n >> 16) & 255)},${f((n >> 8) & 255)},${f(n & 255)})`;
+}
+
 function drawMaterialIcon(ctx, id) {
   const p = (x, y, c) => { ctx.fillStyle = c; ctx.fillRect(x, y, 1, 1); };
   const blob = (color, edge) => {
@@ -290,6 +429,17 @@ function drawMaterialIcon(ctx, id) {
     case I.IRON_INGOT:
       for (let y = 6; y < 11; y++) for (let x = 2 + (10 - y); x < 9 + (10 - y); x++)
         p(x, y, y === 6 ? '#f0f0f0' : '#c8c8c8');
+      break;
+    case I.GOLD_INGOT:
+      for (let y = 6; y < 11; y++) for (let x = 2 + (10 - y); x < 9 + (10 - y); x++)
+        p(x, y, y === 6 ? '#fce97a' : '#f0c93e');
+      break;
+    case I.QUARTZ: blob('#f0ebe4', '#d6cec4'); break;
+    case I.EMERALD:
+      for (let y = 4; y < 12; y++) {
+        const w = y < 7 ? (y - 2) : (12 - y) + 1;
+        for (let x = 8 - w; x <= 8 + w; x++) p(x, y, (x + y) % 3 ? '#21d860' : '#9af5bd');
+      }
       break;
     case I.DIAMOND:
       for (let y = 4; y < 12; y++) {
@@ -329,13 +479,20 @@ function drawMaterialIcon(ctx, id) {
   }
 }
 
-// Returns { icons: {id -> dataURL}, colors: {id -> [r,g,b] 0..1} }.
+// Returns { icons: {id -> dataURL}, colors: {id -> [r,g,b] 0..1},
+//           iconAtlas: canvas, iconIndex: {id -> tile index in icon atlas} }.
 export function buildIcons(atlasCanvas) {
-  const icons = {}, colors = {};
+  const icons = {}, colors = {}, iconIndex = {};
   const c = document.createElement('canvas');
   c.width = c.height = TILE_PX;
   const ctx = c.getContext('2d');
   ctx.imageSmoothingEnabled = false;
+
+  const iconAtlas = document.createElement('canvas');
+  iconAtlas.width = iconAtlas.height = ATLAS_TILES * TILE_PX;
+  const actx = iconAtlas.getContext('2d');
+  actx.imageSmoothingEnabled = false;
+  let nextSlot = 0;
 
   const finish = (id) => {
     icons[id] = c.toDataURL();
@@ -346,6 +503,10 @@ export function buildIcons(atlasCanvas) {
       r += d[i]; g += d[i + 1]; b += d[i + 2]; n++;
     }
     colors[id] = n ? [r / n / 255, g / n / 255, b / n / 255] : [0.6, 0.6, 0.6];
+    const slot = nextSlot++;
+    iconIndex[id] = slot;
+    actx.drawImage(c, 0, 0, TILE_PX, TILE_PX,
+      (slot % ATLAS_TILES) * TILE_PX, ((slot / ATLAS_TILES) | 0) * TILE_PX, TILE_PX, TILE_PX);
   };
 
   // block icons: use side (or all) tile
@@ -366,8 +527,9 @@ export function buildIcons(atlasCanvas) {
     ctx.clearRect(0, 0, 16, 16);
     if ((it.type === 'tool' || it.type === 'weapon') && it.toolType)
       drawToolIcon(ctx, it.toolType, it.tier || 1);
+    else if (it.type === 'egg') drawEggIcon(ctx, it.egg[0], it.egg[1]);
     else drawMaterialIcon(ctx, id);
     finish(id);
   }
-  return { icons, colors };
+  return { icons, colors, iconAtlas, iconIndex };
 }

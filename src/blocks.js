@@ -8,6 +8,11 @@ export const TILES = [
   'diamond_ore', 'glass', 'glowstone', 'netherrack', 'soul_sand', 'quartz_ore', 'obsidian',
   'portal', 'crafting_top', 'crafting_side', 'sandstone', 'bricks', 'stonebrick', 'wool',
   'tnt_side', 'tnt_top', 'torch', 'flower_red', 'flower_yellow', 'snow',
+  'gold_ore', 'redstone_ore', 'lapis_ore', 'emerald_ore',
+  'gold_block', 'iron_block', 'diamond_block', 'mossy_cobble', 'ice',
+  'pumpkin_side', 'pumpkin_top', 'nether_brick', 'quartz_block', 'end_stone', 'bookshelf',
+  'mushroom_red', 'mushroom_brown', 'tall_grass', 'cactus_side', 'cactus_top',
+  'wool_red', 'wool_blue', 'wool_green', 'wool_yellow', 'wool_black', 'wool_orange',
 ];
 export const TILE = {};
 TILES.forEach((n, i) => TILE[n] = i);
@@ -21,6 +26,12 @@ export const B = {
   GLASS: 14, TORCH: 15, CRAFTING: 16, OBSIDIAN: 17, NETHERRACK: 18, SOUL_SAND: 19,
   GLOWSTONE: 20, QUARTZ_ORE: 21, PORTAL: 22, LAVA: 23, GRAVEL: 24, SANDSTONE: 25,
   BRICKS: 26, STONEBRICK: 27, WOOL: 28, TNT: 29, FLOWER_RED: 30, FLOWER_YELLOW: 31,
+  GOLD_ORE: 32, REDSTONE_ORE: 33, LAPIS_ORE: 34, EMERALD_ORE: 35,
+  GOLD_BLOCK: 36, IRON_BLOCK: 37, DIAMOND_BLOCK: 38, MOSSY_COBBLE: 39, SNOW_BLOCK: 40,
+  ICE: 41, PUMPKIN: 42, CACTUS: 43, NETHER_BRICK: 44, QUARTZ_BLOCK: 45, END_STONE: 46,
+  BOOKSHELF: 47, MUSHROOM_RED: 48, MUSHROOM_BROWN: 49, TALL_GRASS: 50,
+  WOOL_RED: 51, WOOL_BLUE: 52, WOOL_GREEN: 53, WOOL_YELLOW: 54, WOOL_BLACK: 55,
+  WOOL_ORANGE: 56,
 };
 
 // def fields:
@@ -73,7 +84,8 @@ def(B.OBSIDIAN, 'Obsidian', { all: 'obsidian' },
 def(B.NETHERRACK, 'Netherrack', { all: 'netherrack' }, { hardness: 0.4, tool: 'pickaxe' });
 def(B.SOUL_SAND, 'Soul Sand', { all: 'soul_sand' }, { hardness: 0.5, tool: 'shovel' });
 def(B.GLOWSTONE, 'Glowstone', { all: 'glowstone' }, { emit: 15, hardness: 0.3 });
-def(B.QUARTZ_ORE, 'Quartz Ore', { all: 'quartz_ore' }, { hardness: 3, tool: 'pickaxe' });
+def(B.QUARTZ_ORE, 'Quartz Ore', { all: 'quartz_ore' },
+  { hardness: 3, tool: 'pickaxe', drops: 126 });
 def(B.PORTAL, 'Nether Portal', { all: 'portal' },
   { opaque: false, solid: false, translucent: true, emit: 11, hardness: Infinity,
     drops: [], placeable: false });
@@ -92,6 +104,42 @@ def(B.FLOWER_RED, 'Rose', { all: 'flower_red' },
   { opaque: false, solid: false, model: 'cross', hardness: 0 });
 def(B.FLOWER_YELLOW, 'Dandelion', { all: 'flower_yellow' },
   { opaque: false, solid: false, model: 'cross', hardness: 0 });
+def(B.GOLD_ORE, 'Gold Ore', { all: 'gold_ore' },
+  { hardness: 3, tool: 'pickaxe', minTier: 3 });
+def(B.REDSTONE_ORE, 'Redstone Ore', { all: 'redstone_ore' },
+  { hardness: 3, tool: 'pickaxe', minTier: 3, emit: 4 });
+def(B.LAPIS_ORE, 'Lapis Lazuli Ore', { all: 'lapis_ore' },
+  { hardness: 3, tool: 'pickaxe', minTier: 2 });
+def(B.EMERALD_ORE, 'Emerald Ore', { all: 'emerald_ore' },
+  { hardness: 3, tool: 'pickaxe', minTier: 3, drops: 127 });
+def(B.GOLD_BLOCK, 'Block of Gold', { all: 'gold_block' }, { hardness: 3, tool: 'pickaxe' });
+def(B.IRON_BLOCK, 'Block of Iron', { all: 'iron_block' }, { hardness: 5, tool: 'pickaxe' });
+def(B.DIAMOND_BLOCK, 'Block of Diamond', { all: 'diamond_block' }, { hardness: 5, tool: 'pickaxe' });
+def(B.MOSSY_COBBLE, 'Mossy Cobblestone', { all: 'mossy_cobble' }, { hardness: 2, tool: 'pickaxe' });
+def(B.SNOW_BLOCK, 'Snow Block', { all: 'snow' }, { hardness: 0.2, tool: 'shovel' });
+def(B.ICE, 'Ice', { all: 'ice' },
+  { opaque: false, translucent: true, filter: 1, hardness: 0.5, tool: 'pickaxe' });
+def(B.PUMPKIN, 'Pumpkin', { top: 'pumpkin_top', bottom: 'pumpkin_top', side: 'pumpkin_side' },
+  { hardness: 1, tool: 'axe' });
+def(B.CACTUS, 'Cactus', { top: 'cactus_top', bottom: 'cactus_top', side: 'cactus_side' },
+  { hardness: 0.4 });
+def(B.NETHER_BRICK, 'Nether Bricks', { all: 'nether_brick' }, { hardness: 2, tool: 'pickaxe' });
+def(B.QUARTZ_BLOCK, 'Block of Quartz', { all: 'quartz_block' }, { hardness: 0.8, tool: 'pickaxe' });
+def(B.END_STONE, 'End Stone', { all: 'end_stone' }, { hardness: 3, tool: 'pickaxe' });
+def(B.BOOKSHELF, 'Bookshelf', { top: 'planks', bottom: 'planks', side: 'bookshelf' },
+  { hardness: 1.5, tool: 'axe' });
+def(B.MUSHROOM_RED, 'Red Mushroom', { all: 'mushroom_red' },
+  { opaque: false, solid: false, model: 'cross', hardness: 0 });
+def(B.MUSHROOM_BROWN, 'Brown Mushroom', { all: 'mushroom_brown' },
+  { opaque: false, solid: false, model: 'cross', hardness: 0 });
+def(B.TALL_GRASS, 'Grass', { all: 'tall_grass' },
+  { opaque: false, solid: false, model: 'cross', hardness: 0, drops: [] });
+def(B.WOOL_RED, 'Red Wool', { all: 'wool_red' }, { hardness: 0.8 });
+def(B.WOOL_BLUE, 'Blue Wool', { all: 'wool_blue' }, { hardness: 0.8 });
+def(B.WOOL_GREEN, 'Green Wool', { all: 'wool_green' }, { hardness: 0.8 });
+def(B.WOOL_YELLOW, 'Yellow Wool', { all: 'wool_yellow' }, { hardness: 0.8 });
+def(B.WOOL_BLACK, 'Black Wool', { all: 'wool_black' }, { hardness: 0.8 });
+def(B.WOOL_ORANGE, 'Orange Wool', { all: 'wool_orange' }, { hardness: 0.8 });
 
 export const BLOCKS = D;
 export const blockDef = (id) => D[id] || D[B.AIR];
@@ -100,13 +148,16 @@ export const blockDef = (id) => D[id] || D[B.AIR];
 // type: 'material' | 'tool' | 'food' | 'weapon'
 export const I = {
   STICK: 100, COAL: 101, IRON_INGOT: 102, DIAMOND: 103, FLINT: 104, FLINT_STEEL: 105,
-  STRING: 106, GUNPOWDER: 107, BONE: 108,
+  STRING: 106, GUNPOWDER: 107, BONE: 108, GOLD_INGOT: 109,
   WOOD_PICK: 110, STONE_PICK: 111, IRON_PICK: 112, DIAMOND_PICK: 113,
   WOOD_AXE: 114, STONE_AXE: 115, IRON_AXE: 116, DIAMOND_AXE: 117,
   WOOD_SHOVEL: 118, STONE_SHOVEL: 119, IRON_SHOVEL: 120, DIAMOND_SHOVEL: 121,
   WOOD_SWORD: 122, STONE_SWORD: 123, IRON_SWORD: 124, DIAMOND_SWORD: 125,
+  QUARTZ: 126, EMERALD: 127,
   BOW: 130, ARROW: 131,
   PORKCHOP: 140, BEEF: 141, MUTTON: 142,
+  EGG_PIG: 150, EGG_COW: 151, EGG_SHEEP: 152, EGG_ZOMBIE: 153, EGG_SKELETON: 154,
+  EGG_CREEPER: 155, EGG_SPIDER: 156,
 };
 
 export const ITEMS = {};
@@ -137,9 +188,19 @@ const tiers = ['Wooden', 'Stone', 'Iron', 'Diamond'];
 });
 item(I.BOW, 'Bow', { type: 'weapon', stack: 1 });
 item(I.ARROW, 'Arrow');
+item(I.GOLD_INGOT, 'Gold Ingot');
+item(I.QUARTZ, 'Nether Quartz');
+item(I.EMERALD, 'Emerald');
 item(I.PORKCHOP, 'Porkchop', { type: 'food', food: 6 });
 item(I.BEEF, 'Steak', { type: 'food', food: 7 });
 item(I.MUTTON, 'Mutton', { type: 'food', food: 5 });
+item(I.EGG_PIG, 'Pig Spawn Egg', { type: 'egg', mob: 'pig', egg: ['#eda3a2', '#d8888f'] });
+item(I.EGG_COW, 'Cow Spawn Egg', { type: 'egg', mob: 'cow', egg: ['#5d4434', '#e8e0d8'] });
+item(I.EGG_SHEEP, 'Sheep Spawn Egg', { type: 'egg', mob: 'sheep', egg: ['#e8e8e8', '#d8c0b0'] });
+item(I.EGG_ZOMBIE, 'Zombie Spawn Egg', { type: 'egg', mob: 'zombie', egg: ['#5a9c50', '#2a8080'] });
+item(I.EGG_SKELETON, 'Skeleton Spawn Egg', { type: 'egg', mob: 'skeleton', egg: ['#c8c8c8', '#9a9a9a'] });
+item(I.EGG_CREEPER, 'Creeper Spawn Egg', { type: 'egg', mob: 'creeper', egg: ['#4dad4d', '#1a1a1a'] });
+item(I.EGG_SPIDER, 'Spider Spawn Egg', { type: 'egg', mob: 'spider', egg: ['#262626', '#c03030'] });
 
 export function itemName(id) {
   if (id < 100) return blockDef(id).name;
@@ -185,15 +246,41 @@ export const RECIPES = [
   { out: B.WOOL, count: 1, ins: [[I.STRING, 4]] },
   { out: B.TNT, count: 1, ins: [[B.SAND, 4], [I.GUNPOWDER, 5]], table: true },
   { out: B.STONE, count: 1, ins: [[B.COBBLE, 1], [I.COAL, 1]] },
+  { out: I.GOLD_INGOT, count: 1, ins: [[B.GOLD_ORE, 1], [I.COAL, 1]] },
+  { out: B.GOLD_BLOCK, count: 1, ins: [[I.GOLD_INGOT, 9]], table: true },
+  { out: B.IRON_BLOCK, count: 1, ins: [[I.IRON_INGOT, 9]], table: true },
+  { out: B.DIAMOND_BLOCK, count: 1, ins: [[I.DIAMOND, 9]], table: true },
+  { out: B.QUARTZ_BLOCK, count: 1, ins: [[I.QUARTZ, 4]] },
+  { out: B.NETHER_BRICK, count: 4, ins: [[B.NETHERRACK, 4], [I.COAL, 1]] },
+  { out: B.BOOKSHELF, count: 1, ins: [[B.PLANKS, 6], [I.STRING, 3]], table: true },
+  { out: B.WOOL_RED, count: 1, ins: [[B.WOOL, 1], [B.FLOWER_RED, 1]] },
+  { out: B.WOOL_YELLOW, count: 1, ins: [[B.WOOL, 1], [B.FLOWER_YELLOW, 1]] },
 ];
 
 // items shown in the creative inventory
 export const CREATIVE_ITEMS = [
-  B.STONE, B.GRASS, B.DIRT, B.COBBLE, B.PLANKS, B.LOG, B.LEAVES, B.SAND, B.SANDSTONE,
-  B.GRAVEL, B.GLASS, B.BRICKS, B.STONEBRICK, B.WOOL, B.OBSIDIAN, B.BEDROCK,
-  B.COAL_ORE, B.IRON_ORE, B.DIAMOND_ORE, B.QUARTZ_ORE, B.GLOWSTONE, B.NETHERRACK,
-  B.SOUL_SAND, B.TORCH, B.CRAFTING, B.TNT, B.WATER, B.LAVA, B.FLOWER_RED, B.FLOWER_YELLOW,
-  I.FLINT_STEEL, I.DIAMOND_PICK, I.DIAMOND_AXE, I.DIAMOND_SHOVEL, I.DIAMOND_SWORD,
-  I.BOW, I.ARROW, I.STICK, I.COAL, I.IRON_INGOT, I.DIAMOND, I.FLINT, I.STRING,
-  I.GUNPOWDER, I.PORKCHOP, I.BEEF, I.MUTTON,
+  // natural blocks
+  B.STONE, B.GRASS, B.DIRT, B.COBBLE, B.MOSSY_COBBLE, B.SAND, B.SANDSTONE, B.GRAVEL,
+  B.LOG, B.PLANKS, B.LEAVES, B.SNOW_BLOCK, B.ICE, B.PUMPKIN, B.CACTUS, B.BEDROCK,
+  B.OBSIDIAN, B.END_STONE,
+  // ores & mineral blocks
+  B.COAL_ORE, B.IRON_ORE, B.GOLD_ORE, B.DIAMOND_ORE, B.EMERALD_ORE, B.REDSTONE_ORE,
+  B.LAPIS_ORE, B.QUARTZ_ORE, B.IRON_BLOCK, B.GOLD_BLOCK, B.DIAMOND_BLOCK, B.QUARTZ_BLOCK,
+  // building blocks
+  B.BRICKS, B.STONEBRICK, B.GLASS, B.BOOKSHELF, B.WOOL, B.WOOL_RED, B.WOOL_ORANGE,
+  B.WOOL_YELLOW, B.WOOL_GREEN, B.WOOL_BLUE, B.WOOL_BLACK,
+  // nether
+  B.NETHERRACK, B.NETHER_BRICK, B.SOUL_SAND, B.GLOWSTONE,
+  // plants & utility
+  B.FLOWER_RED, B.FLOWER_YELLOW, B.TALL_GRASS, B.MUSHROOM_RED, B.MUSHROOM_BROWN,
+  B.TORCH, B.CRAFTING, B.TNT, B.WATER, B.LAVA,
+  // weapons & tools
+  I.WOOD_SWORD, I.STONE_SWORD, I.IRON_SWORD, I.DIAMOND_SWORD, I.BOW, I.ARROW,
+  I.DIAMOND_PICK, I.DIAMOND_AXE, I.DIAMOND_SHOVEL, I.FLINT_STEEL,
+  // spawn eggs
+  I.EGG_PIG, I.EGG_COW, I.EGG_SHEEP, I.EGG_ZOMBIE, I.EGG_SKELETON, I.EGG_CREEPER,
+  I.EGG_SPIDER,
+  // materials & food
+  I.STICK, I.COAL, I.IRON_INGOT, I.GOLD_INGOT, I.DIAMOND, I.EMERALD, I.QUARTZ,
+  I.FLINT, I.STRING, I.GUNPOWDER, I.BONE, I.PORKCHOP, I.BEEF, I.MUTTON,
 ];

@@ -120,6 +120,36 @@ void main() {
   frag = vec4(mix(c, uFogColor, fog), 1.0);
 }`;
 
+const SPRITE_VS = `#version 300 es
+precision highp float;
+layout(location=0) in vec2 aPos;
+uniform mat4 uVP, uModel;
+uniform vec2 uUVOff;
+uniform float uUVScale;
+uniform vec3 uCam;
+out vec2 vUV; out float vDist;
+void main() {
+  vec4 w = uModel * vec4(aPos.x, aPos.y, 0.0, 1.0);
+  gl_Position = uVP * w;
+  vUV = uUVOff + vec2(aPos.x + 0.5, 1.0 - aPos.y) * uUVScale;
+  vDist = distance(w.xz, uCam.xz);
+}`;
+
+const SPRITE_FS = `#version 300 es
+precision highp float;
+in vec2 vUV; in float vDist;
+uniform sampler2D uTex;
+uniform float uLight, uFogStart, uFogEnd;
+uniform vec3 uFogColor;
+out vec4 frag;
+void main() {
+  vec4 tex = texture(uTex, vUV);
+  if (tex.a < 0.5) discard;
+  vec3 c = tex.rgb * uLight;
+  float fog = smoothstep(uFogStart, uFogEnd, vDist);
+  frag = vec4(mix(c, uFogColor, fog), 1.0);
+}`;
+
 const LINE_VS = `#version 300 es
 precision highp float;
 layout(location=0) in vec3 aPos;
@@ -156,7 +186,7 @@ function compile(gl, vsSrc, fsSrc) {
 }
 
 export class Renderer {
-  constructor(canvas, atlasCanvas) {
+  constructor(canvas, atlasCanvas, iconAtlasCanvas) {
     const gl = canvas.getContext('webgl2', { antialias: false });
     if (!gl) throw new Error('WebGL2 not supported');
     this.gl = gl;
@@ -165,18 +195,34 @@ export class Renderer {
     this.chunkShader = compile(gl, CHUNK_VS, CHUNK_FS);
     this.skyShader = compile(gl, SKY_VS, SKY_FS);
     this.entShader = compile(gl, ENT_VS, ENT_FS);
+    this.spriteShader = compile(gl, SPRITE_VS, SPRITE_FS);
     this.lineShader = compile(gl, LINE_VS, LINE_FS);
 
-    // atlas texture
-    this.atlas = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, this.atlas);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, atlasCanvas);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    const makeTex = (canvasSrc) => {
+      const t = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, t);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, canvasSrc);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      return t;
+    };
+    this.atlas = makeTex(atlasCanvas);
+    this.iconTex = iconAtlasCanvas ? makeTex(iconAtlasCanvas) : null;
 
     this.meshes = new Map();
+
+    // unit quad for item sprites (x in [-0.5,0.5], y in [0,1])
+    this.quadVao = gl.createVertexArray();
+    gl.bindVertexArray(this.quadVao);
+    const qb = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, qb);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+      -0.5, 0, 0.5, 0, 0.5, 1, -0.5, 0, 0.5, 1, -0.5, 1,
+    ]), gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(0);
+    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
 
     // fullscreen triangle-pair for sky
     this.skyVao = gl.createVertexArray();
@@ -370,6 +416,28 @@ export class Renderer {
         gl.uniform1f(es.u.uLight, d.light);
         gl.uniform1f(es.u.uFlash, d.flash || 0);
         gl.drawArrays(gl.TRIANGLES, 0, 36);
+      }
+    }
+
+    // ---- item sprites ----
+    if (s.spriteDraws && s.spriteDraws.length && this.iconTex) {
+      const sp = this.spriteShader;
+      gl.useProgram(sp.prog);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, this.iconTex);
+      gl.uniform1i(sp.u.uTex, 0);
+      gl.uniformMatrix4fv(sp.u.uVP, false, this.mvp);
+      gl.uniform3fv(sp.u.uCam, s.camPos);
+      gl.uniform1f(sp.u.uUVScale, 1 / 16);
+      gl.uniform1f(sp.u.uFogStart, fogStart);
+      gl.uniform1f(sp.u.uFogEnd, fogEnd);
+      gl.uniform3fv(sp.u.uFogColor, fogColor);
+      gl.bindVertexArray(this.quadVao);
+      for (const d of s.spriteDraws) {
+        gl.uniformMatrix4fv(sp.u.uModel, false, d.model);
+        gl.uniform2fv(sp.u.uUVOff, d.uv);
+        gl.uniform1f(sp.u.uLight, d.light);
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
       }
     }
 
