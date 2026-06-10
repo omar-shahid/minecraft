@@ -1,0 +1,9 @@
+{
+  "name": "webcraft",
+  "version": "1.0.0",
+  "description": "A Minecraft clone in pure JavaScript + WebGL2",
+  "type": "module",
+  "scripts": {
+    "start": "python3 -m http.server 8000 || npx -y http-server -p 8000"
+  }
+}

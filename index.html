@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>WebCraft — a Minecraft clone in WebGL</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; user-select:none; -webkit-user-select:none; }
+  html,body { width:100%; height:100%; overflow:hidden; background:#000;
+    font-family:'Courier New', monospace; color:#eee; }
+  #gl { position:absolute; inset:0; width:100%; height:100%; display:block; }
+  .screen { position:absolute; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; z-index:10; }
+  .hidden { display:none !important; }
+
+  /* ---------- main menu ---------- */
+  #menu { background:linear-gradient(#1a2a40,#0a0f18); }
+  #menu .title { font-size:64px; font-weight:bold; letter-spacing:4px; color:#fff;
+    text-shadow: 4px 4px 0 #3a3a3a, 0 0 30px #6af; margin-bottom:8px; }
+  #menu .subtitle { color:#9ab; margin-bottom:28px; font-size:14px; }
+  .panel { background:rgba(0,0,0,.55); border:2px solid #555; padding:20px;
+    min-width:420px; max-width:560px; max-height:70vh; overflow-y:auto; }
+  .btn { display:block; width:100%; padding:10px 16px; margin:6px 0; font-size:16px;
+    font-family:inherit; color:#eee; background:#6e6e6e; border:2px solid;
+    border-color:#a8a8a8 #4a4a4a #4a4a4a #a8a8a8; cursor:pointer; text-align:center; }
+  .btn:hover { background:#7e8edc; }
+  .btn:active { border-color:#4a4a4a #a8a8a8 #a8a8a8 #4a4a4a; }
+  .btn.small { width:auto; display:inline-block; padding:4px 10px; font-size:13px; margin:2px; }
+  .btn.danger:hover { background:#c0504d; }
+  input[type=text], select { font-family:inherit; font-size:15px; padding:6px;
+    background:#111; color:#eee; border:2px solid #555; width:100%; margin:4px 0; }
+  input[type=range] { width:160px; }
+  .row { display:flex; gap:8px; align-items:center; justify-content:space-between; margin:8px 0; }
+  .world-entry { display:flex; align-items:center; justify-content:space-between; gap:8px;
+    border:1px solid #444; padding:8px; margin:6px 0; background:rgba(255,255,255,.04); }
+  .world-entry .winfo { flex:1; }
+  .world-entry .wname { font-size:16px; color:#fff; }
+  .world-entry .wmeta { font-size:12px; color:#9a9; }
+  h3 { margin:10px 0 6px; color:#cfc; font-size:15px; }
+
+  /* ---------- HUD ---------- */
+  #hud { pointer-events:none; z-index:5; }
+  #crosshair { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+    font-size:22px; color:rgba(255,255,255,.85); text-shadow:0 0 2px #000; }
+  #hotbar { position:absolute; left:50%; bottom:8px; transform:translateX(-50%);
+    display:flex; gap:2px; }
+  .slot { width:46px; height:46px; background:rgba(20,20,20,.7); border:2px solid #888;
+    position:relative; image-rendering:pixelated; }
+  .slot img { width:100%; height:100%; image-rendering:pixelated; }
+  .slot .cnt { position:absolute; right:2px; bottom:0; font-size:14px; font-weight:bold;
+    color:#fff; text-shadow:1px 1px 0 #000; }
+  .slot.sel { border-color:#fff; box-shadow:0 0 6px #fff inset; }
+  #hearts { position:absolute; left:50%; bottom:62px; transform:translateX(-50%);
+    display:flex; gap:1px; font-size:18px; text-shadow:1px 1px 0 #000; }
+  #breakbar { position:absolute; left:50%; top:54%; transform:translateX(-50%);
+    width:80px; height:6px; background:rgba(0,0,0,.5); border:1px solid #000; }
+  #breakbar div { height:100%; background:#e0e0e0; width:0%; }
+  #debug { position:absolute; left:6px; top:6px; font-size:12px; color:#fff;
+    text-shadow:1px 1px 0 #000; white-space:pre; }
+  #hint { position:absolute; left:50%; top:8px; transform:translateX(-50%);
+    font-size:13px; color:#fff; text-shadow:1px 1px 0 #000; background:rgba(0,0,0,.35);
+    padding:3px 10px; border-radius:3px; transition:opacity .5s; }
+  #vignette { position:absolute; inset:0; pointer-events:none; opacity:0;
+    box-shadow:0 0 120px 60px rgba(255,0,0,.55) inset; transition:opacity .15s; }
+  #portalFade { position:absolute; inset:0; pointer-events:none; opacity:0;
+    background:#3a0d5e; transition:opacity .4s; }
+  #fireOverlay { position:absolute; inset:0; pointer-events:none; opacity:0;
+    box-shadow:0 0 140px 70px rgba(255,120,0,.5) inset; }
+  #waterOverlay { position:absolute; inset:0; pointer-events:none; opacity:0;
+    background:rgba(20,50,150,.3); }
+
+  /* ---------- inventory ---------- */
+  #inv { background:rgba(0,0,0,.5); z-index:20; }
+  #inv .invpanel { background:#c6c6c6; border:3px solid; border-color:#fff #555 #555 #fff;
+    padding:14px; color:#333; display:flex; gap:14px; }
+  .grid { display:grid; grid-template-columns:repeat(9, 44px); gap:2px; }
+  .grid9 { grid-template-columns:repeat(9, 44px); }
+  .grid.creative { grid-template-columns:repeat(9, 44px); max-height:300px; overflow-y:auto; }
+  #inv .slot { background:#8b8b8b; border:2px solid; border-color:#373737 #fff #fff #373737;
+    width:44px; height:44px; cursor:pointer; pointer-events:auto; }
+  #inv .slot:hover { background:#a5a5a5; }
+  #inv h3 { color:#3a3a3a; }
+  #craftlist { width:230px; max-height:340px; overflow-y:auto; }
+  .recipe { display:flex; align-items:center; gap:6px; padding:4px; margin:2px 0;
+    border:1px solid #999; cursor:pointer; pointer-events:auto; background:#b5b5b5; }
+  .recipe.no { opacity:.45; cursor:not-allowed; }
+  .recipe:hover:not(.no) { background:#d5e5b5; }
+  .recipe img { width:28px; height:28px; image-rendering:pixelated; }
+  .recipe .rname { font-size:12px; flex:1; }
+  .recipe .rneeds { font-size:10px; color:#544; }
+  #cursorItem { position:fixed; width:40px; height:40px; pointer-events:none; z-index:50;
+    image-rendering:pixelated; display:none; }
+  #cursorItem img { width:100%; height:100%; image-rendering:pixelated; }
+  #cursorItem .cnt { position:absolute; right:0; bottom:-2px; font-size:14px; font-weight:bold;
+    color:#fff; text-shadow:1px 1px 0 #000; }
+
+  /* ---------- pause / death / settings ---------- */
+  #pause, #death, #settingsModal { background:rgba(0,0,0,.6); z-index:30; }
+  #death { background:rgba(120,0,0,.45); }
+  #death h1 { font-size:48px; margin-bottom:20px; text-shadow:3px 3px 0 #300; }
+  .setrow { display:flex; justify-content:space-between; align-items:center;
+    margin:10px 0; gap:18px; }
+  .setrow label { font-size:14px; }
+  .setrow .val { width:48px; text-align:right; font-size:13px; color:#9fc; }
+  #loading { background:#000; z-index:40; font-size:20px; }
+</style>
+</head>
+<body>
+  <canvas id="gl"></canvas>
+
+  <div id="hud" class="hidden">
+    <div id="crosshair">+</div>
+    <div id="vignette"></div>
+    <div id="fireOverlay"></div>
+    <div id="waterOverlay"></div>
+    <div id="portalFade"></div>
+    <div id="hearts"></div>
+    <div id="hotbar"></div>
+    <div id="breakbar" class="hidden"><div></div></div>
+    <div id="debug" class="hidden"></div>
+    <div id="hint" style="opacity:0"></div>
+  </div>
+
+  <div id="inv" class="screen hidden"></div>
+  <div id="cursorItem"><img alt=""><span class="cnt"></span></div>
+
+  <div id="menu" class="screen">
+    <div class="title">WEBCRAFT</div>
+    <div class="subtitle">a Minecraft clone &mdash; pure JavaScript + WebGL2</div>
+    <div class="panel" id="menuPanel"></div>
+  </div>
+
+  <div id="pause" class="screen hidden">
+    <div class="panel" id="pausePanel"></div>
+  </div>
+
+  <div id="settingsModal" class="screen hidden">
+    <div class="panel" id="settingsPanel"></div>
+  </div>
+
+  <div id="death" class="screen hidden">
+    <h1>You died!</h1>
+    <div class="panel" id="deathPanel"></div>
+  </div>
+
+  <div id="loading" class="screen hidden">Generating world...</div>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
